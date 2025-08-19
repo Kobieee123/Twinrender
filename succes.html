@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Thanks – Twinrender</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{--ink:#0b0f1a;--muted:#556070}
+    body{font-family:system-ui,-apple-system,Segoe UI,Inter,Roboto;max-width:780px;margin:40px auto;padding:0 16px;color:var(--ink)}
+    .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:14px 0}
+    a.button{display:inline-block;padding:10px 14px;border-radius:10px;border:1px solid #e5e7eb;text-decoration:none}
+    .muted{color:var(--muted)}
+    ul{padding-left:18px}
+    li{margin:6px 0}
+  </style>
+</head>
+<body>
+  <h1>✅ Thank you for your purchase!</h1>
+  <p>Your payment was successful. Below are your download links.</p>
+
+  <div id="files" class="card">
+    <div class="muted">Loading your files…</div>
+  </div>
+
+  <p class="muted">If something looks wrong, email <a href="mailto:Twinrender@hotmail.com">Twinrender@hotmail.com</a>.</p>
+  <p><a class="button" href="index.html">← Back to shop</a></p>
+
+  <script>
+    // We saved last order just before redirecting to Stripe in index.html
+    const box = document.getElementById('files');
+    try{
+      const lastOrder = JSON.parse(localStorage.getItem('lastOrder')||'[]');
+      if(Array.isArray(lastOrder) && lastOrder.length){
+        const list = lastOrder.map(p=>{
+          const name = (p.title || p.id || 'File');
+          const link = p.file; // can be local "downloads/..." or a full cloud URL
+          return `<li><a href="${link}" download>${name}</a></li>`;
+        }).join('');
+        box.innerHTML = `<h3>Your downloads</h3><ul>${list}</ul>
+          <p class="muted">Tip: keep this page open while your downloads start.</p>`;
+        // Optional: clear last order now that we showed it
+        // localStorage.removeItem('lastOrder');
+      } else {
+        box.innerHTML = `<p>We couldn't find your files automatically.</p>
+          <p class="muted">If you used a different browser/device, no worries—email us at
+          <a href="mailto:Twinrender@hotmail.com">Twinrender@hotmail.com</a> and we’ll resend your links.</p>`;
+      }
+    }catch(e){
+      box.innerHTML = `<p>We couldn't load your files.</p>
+        <p class="muted">Please email <a href="mailto:Twinrender@hotmail.com">Twinrender@hotmail.com</a>.</p>`;
+    }
+  </script>
+</body>
+</html>
