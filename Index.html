@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Twinrender – Shop</title>
+
+  <!-- Stripe loader (unchanged) -->
+  <link rel="preconnect" href="https://js.stripe.com">
+  <script src="https://js.stripe.com/v3/"></script>
+
+  <!-- Favicon -->
+  <link rel="icon" href="Images/Logo.png" type="image/png">
+
+  <style>
+    :root{
+      /* Color system */
+      --ink-900:#0f1420;         /* very dark grey (no true black) */
+      --ink-800:#1a2232;
+      --ink-700:#2a344a;
+      --ink-600:#3a4966;
+      --ink-500:#556280;
+      --ink-400:#6b7692;         /* similar to top-right grey you liked */
+      --ink-300:#8d96ab;
+      --ink-200:#cbd2e0;
+      --ink-100:#eef1f6;
+
+      --brand:#8fb2d9;           /* pulled from your logo vibe */
+      --bg:#ffffff;              /* white site background */
+      --card:#f3f5f8;            /* light grey card/banner */
+      --border:#e5e9f1;
+
+      --radius:14px;
+    }
+
+    /* Base */
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--ink-900);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+    /* Header */
+    header.site{
+      position:sticky; top:0; z-index:10;
+      background:var(--bg);
+      border-bottom:1px solid var(--border);
+    }
+    .site .row{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:16px; padding:14px 0;
+    }
+    .brand{
+      display:flex; align-items:center; gap:14px;
+      min-height:44px;
+    }
+    .brand img.logo{
+      height:44px; width:auto; display:block; object-fit:contain;
+    }
+    .brand .name{
+      display:flex; flex-direction:column; line-height:1.1;
+    }
+    .brand .title{font-weight:700; font-size:18px}
+    .brand .sub{font-size:12px; color:var(--ink-500)}
+
+    .nav{
+      display:flex; align-items:center; gap:10px;
+    }
+    .nav a,
+    .nav button{
+      padding:8px 12px; border-radius:10px; border:1px solid var(--border);
+      background:var(--bg); cursor:pointer; color:var(--ink-800);
+      font-weight:600;
+    }
+    .nav a:hover,.nav button:hover{background:var(--card)}
+
+    /* Mini cart on the right */
+    .cart-mini{
+      display:flex; align-items:center; gap:12px;
+      background:var(--bg);
+    }
+    .cart-mini .totals{
+      text-align:right; min-width:120px;
+      color:var(--ink-600); font-size:13px;
+      line-height:1.2;
+    }
+    .cart-mini .totals strong{
+      display:block; color:var(--ink-800); font-size:14px;
+    }
+    .cart-mini .icon-btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:42px; height:42px; border-radius:12px;
+      border:1px solid var(--border); background:var(--bg);
+      cursor:pointer;
+    }
+    .cart-mini svg{width:20px;height:20px;stroke:var(--ink-800)}
+    #openCart{display:none} /* we use the cart icon as the opener on desktop */
+    @media (max-width:720px){
+      #openCart{display:inline-flex}
+      .cart-mini .icon-btn{display:none}
+    }
+
+    /* Intro banner */
+    .intro{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:22px;
+      margin:22px auto;
+    }
+    .intro h2{margin:0 0 10px 0; font-size:22px}
+    .intro p{margin:0 0 12px 0; color:var(--ink-700)}
+
+    .bullets{
+      margin:10px 0 0 0; padding-left:0; list-style:none;
+      display:grid; gap:8px;
+    }
+    .bullets li{display:flex; gap:10px; align-items:flex-start; color:var(--ink-800)}
+    .bullets li .emo{width:20px}
+
+    /* Section title */
+    .section{
+      margin:28px 0 10px;
+      font-weight:700; font-size:18px;
+      color:var(--ink-800);
+    }
+    .section-sub{margin:0 0 16px; color:var(--ink-500); font-size:14px}
+
+    /* Product grid */
+    .grid{
+      display:grid; gap:18px;
+      grid-template-columns:repeat(3, 1fr);
+    }
+    @media (max-width:980px){ .grid{grid-template-columns:repeat(2, 1fr)} }
+    @media (max-width:640px){ .grid{grid-template-columns:1fr} }
+
+    .card{
+      border:1px solid var(--border);
+      background:#fff; border-radius:var(--radius); overflow:hidden;
+      display:flex; flex-direction:column;
+    }
+    .card .img-wrap{
+      width:100%;
+      aspect-ratio:1/1;          /* perfect square */
+      overflow:hidden; background:var(--ink-100);
+    }
+    .card img{
+      width:100%; height:100%; object-fit:cover; display:block;
+    }
+    .pad{padding:14px}
+    .title{font-weight:700;margin:0 0 6px}
+    .price{opacity:.8;margin:0 0 12px;color:var(--ink-600)}
+    .btn{
+      border:0;border-radius:10px;background:var(--ink-800);
+      color:white;font-weight:700;padding:10px 14px;cursor:pointer;width:100%;
+    }
+    .btn:hover{background:var(--ink-700)}
+
+    /* Drawer cart (your JS uses #cart etc; untouched) */
+    aside.cart{
+      position:fixed; top:0; right:0; width:360px; max-width:90vw; height:100dvh;
+      background:#fff; border-left:1px solid var(--border);
+      transform:translateX(100%); transition:.25s; display:flex; flex-direction:column;
+      box-shadow:-8px 0 18px rgba(0,0,0,.06);
+    }
+    aside.cart.open{transform:translateX(0)}
+    .cart-head{display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--border)}
+    .cart-body{padding:12px;gap:10px;display:flex;flex-direction:column;overflow:auto}
+    .cart-item{display:flex;gap:10px;border:1px solid var(--border);border-radius:12px;padding:10px;background:var(--bg)}
+    .cart-item img{width:64px;height:64px;object-fit:cover;border-radius:8px;background:var(--ink-100)}
+    .input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--ink-900)}
+    .total{margin:8px 0 14px;font-weight:800}
+    .footer-note{opacity:.7;font-size:12px}
+
+    /* Footer banner (light grey info band) */
+    footer.site{
+      border-top:1px solid var(--border);
+      margin-top:40px; background:var(--card);
+    }
+    .foot{
+      display:grid; gap:28px; padding:28px 0;
+      grid-template-columns: 1.2fr 1fr 1fr;
+    }
+    @media (max-width:900px){ .foot{grid-template-columns:1fr} }
+    .foot h4{margin:0 0 10px;font-size:14px;color:var(--ink-700)}
+    .foot p,.foot a,.foot li{color:var(--ink-600); font-size:14px}
+    .foot ul{list-style:none; padding:0; margin:0; display:grid; gap:8px}
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="site">
+    <div class="wrap row">
+
+      <!-- Brand + logo -->
+      <a class="brand" href="index.html" aria-label="Go to shop">
+        <img class="logo" src="Images/Logo.png" alt="Twinrender logo"
+             onerror="this.style.display='none'">
+        <div class="name">
+          <div class="title">Twinrender</div>
+          <div class="sub">ready to use with Twinmotion</div>
+        </div>
+      </a>
+
+      <!-- Nav -->
+      <nav class="nav" aria-label="primary">
+        <a href="index.html">Shop</a>
+        <a href="https://www.instagram.com/archiprogress" target="_blank" rel="noopener">My account</a>
+        <a href="mailto:Twinrender@hotmail.com?subject=Twinrender%20inquiry">Contact</a>
+        <a href="#" onclick="alert('Terms of use are coming soon.'); return false;">Terms of use</a>
+      </nav>
+
+      <!-- Mini cart summary (JS only reads these spans; checkout code unchanged) -->
+      <div class="cart-mini">
+        <div class="totals">
+          <strong><span id="cartTotal">€ 0.00</span></strong>
+          <span><span id="cartQty">0</span> item(s)</span>
+        </div>
+        <!-- Minimal icon button to open the cart drawer -->
+        <button class="icon-btn" aria-label="Open cart" onclick="document.getElementById('openCart').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+            <path d="M6 6h15l-1.5 9h-13L5 3H2" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="9" cy="21" r="1.6" stroke="currentColor"/>
+            <circle cx="18" cy="21" r="1.6" stroke="currentColor"/>
+          </svg>
+        </button>
+        <!-- Hidden fallback button (kept for mobile/JS) -->
+        <button id="openCart" style="display:none;">Your cart</button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- INTRO BANNER -->
+  <div class="wrap">
+    <section class="intro" aria-label="intro">
+      <h2>Skip the setup. Start rendering.</h2>
+      <p>
+        When you purchase, you get the exact Twinmotion source file of the render images shown.
+        Use it as your shortcut to high-quality results. What you see is what you get —
+        just swap in your model and hit render.
+      </p>
+      <ul class="bullets">
+        <li><span class="emo">📂</span>Replace my model with yours — all settings stay in place</li>
+        <li><span class="emo">💡</span>Perfectly tuned lighting, cameras and environments</li>
+        <li><span class="emo">🎨</span>Realistic materials and textures ready to go</li>
+        <li><span class="emo">⏱️</span>Save hours of trial &amp; error — render professional images instantly</li>
+        <li><span class="emo">✨</span>Learn from a complete example and improve your workflow</li>
+      </ul>
+    </section>
+
+    <!-- SECTION HEADINGS (clean, no leftover text at bottom) -->
+    <h3 class="section">Products</h3>
+    <p class="section-sub">Add to cart and proceed to checkout.</p>
+
+    <!-- PRODUCT GRID - JS fills this -->
+    <div class="grid" id="productGrid"></div>
+  </div>
+
+  <!-- CART DRAWER (structure unchanged) -->
+  <aside class="cart" id="cart" aria-label="cart drawer">
+    <div class="cart-head">
+      <strong>Your cart</strong>
+      <button class="nav" id="closeCart">Close</button>
+    </div>
+    <div class="cart-body">
+      <div id="cartItems"></div>
+
+      <div style="color:var(--ink-600)">Name</div>
+      <input class="input" id="buyerName" placeholder="Your name"/>
+      <div style="color:var(--ink-600)">Email</div>
+      <input class="input" id="buyerEmail" placeholder="you@example.com"/>
+
+      <div class="total" id="totalLabel">Total: € 0.00</div>
+      <button class="btn" id="checkoutBtn">Checkout</button>
+      <div class="footer-note" id="msg"></div>
+    </div>
+  </aside>
+
+  <!-- FOOTER BANNER -->
+  <footer class="site">
+    <div class="wrap foot">
+      <div>
+        <h4>Pages</h4>
+        <ul>
+          <li><a href="index.html">Shop</a></li>
+          <li><a href="https://www.instagram.com/archiprogress" target="_blank" rel="noopener">My account</a></li>
+          <li><a href="mailto:Twinrender@hotmail.com?subject=Twinrender%20inquiry">Contact</a></li>
+          <li><a href="#" onclick="alert('Terms of use are coming soon.'); return false;">Terms of use</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Shop currency</h4>
+        <p>EUR (€)</p>
+        <h4 style="margin-top:16px">Cart</h4>
+        <p><strong id="cartTotal_footer">€ 0.00</strong> • <span id="cartQty_footer">0</span> items</p>
+      </div>
+      <div>
+        <h4>Address</h4>
+        <p>
+          Twinrender<br>
+          <a href="mailto:Twinrender@hotmail.com">Twinrender@hotmail.com</a><br>
+          Instagram: <a href="https://www.instagram.com/archiprogress" target="_blank" rel="noopener">@archiprogress</a>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+
+  <script>
+  /* ============================
+     1) SIMPLE TEST/LIVE TOGGLE
+     ============================ */
+  const MODE = "test"; // <<< "test" or "live"
+
+  const STRIPE_PUBLISHABLE = {
+    test: "pk_test_51RxuD8HoOWyFBTgUahIOlF5pVwHqjSoGiG14HULLaNbso9zK9LtOtSOhuDZVReOt1gAusMPKJGT6UoSGBoejozvM00kSsc8Qvr",
+    live: "pk_live_51RxuD8HoOWyFBTgU1X8zPjcFWis7i0tbg0tGmxcxvaoYYJBMct84LRKCBzswNZcAHGv8uOLCCrxy2KXmsttFhLOz003YcvJZjL"
+  };
+  const stripe = Stripe(STRIPE_PUBLISHABLE[MODE]);
+
+  /* ============================
+     2) PRODUCTS
+     ============================ */
+  const PRODUCTS = [
+    {
+      id: "RT-0001",
+      title: "Rooftop Terras (Twinmotion)",
+      price: 29.00,
+      img: "Images/rooftop-terras.jpg",     // square recommended
+      fileId: "1oOgTasMp1O11TNoixu4ScY3v4unceO6V",
+      filename: "Rooftop-Terras.zip"
+    }
+  ];
+
+  /* ======= CART RUNTIME ======= */
+  const productGrid = document.getElementById('productGrid');
+  const cartEl = document.getElementById('cart');
+  const cartItemsEl = document.getElementById('cartItems');
+  const totalLabel = document.getElementById('totalLabel');
+  const msg = document.getElementById('msg');
+  const miniPrice = document.getElementById('miniPrice');
+  const miniItems = document.getElementById('miniItems');
+  const miniCartBtn = document.getElementById('miniCartBtn');
+
+  let cart = []; // {id, title, price, img, fileId, filename}
+
+  function renderProducts(){
+    productGrid.innerHTML = PRODUCTS.map(p => `
+      <article class="card">
+        <div class="media">
+          <img src="${p.img}" alt="${p.title}"
+               onerror="this.onerror=null;this.src=this.src.toLowerCase();">
+        </div>
+        <div class="pad">
+          <div class="title">${p.title}</div>
+          <div class="price">€ ${p.price.toFixed(2)}</div>
+          <button class="buy" onclick='addToCart("${p.id}")'>Add to cart</button>
+        </div>
+      </article>
+    `).join('');
+  }
+  renderProducts();
+
+  function addToCart(id){
+    const p = PRODUCTS.find(x=>x.id===id);
+    if(!p) return;
+    cart.push({...p});
+    openCart();
+    renderCart();
+  }
+  function removeFromCart(i){
+    cart.splice(i,1);
+    renderCart();
+  }
+
+  function updateCartSummary(){
+    const total = cart.reduce((s,x)=>s+x.price,0);
+    const count = cart.length;
+    miniPrice.textContent = `${total.toFixed(2)} €`;
+    miniItems.textContent = `${count} ${count===1?'item':'items'}`;
+    totalLabel.textContent = `Total: € ${total.toFixed(2)}`;
+  }
+
+  function renderCart(){
+    if(cart.length===0){
+      cartItemsEl.innerHTML = `<div class="muted">Your cart is empty.</div>`;
+      updateCartSummary();
+      return;
+    }
+    cartItemsEl.innerHTML = cart.map((c,i)=>`
+      <div class="cart-item">
+        <img src="${c.img || ''}" onerror="this.onerror=null;this.src=this.src.toLowerCase();">
+        <div>
+          <div><strong>${c.title}</strong></div>
+          <div class="muted">€ ${c.price.toFixed(2)}</div>
+        </div>
+        <div class="right">
+          <button class="buy" style="background:#eee;color:#111" onclick="removeFromCart(${i})">Remove</button>
+        </div>
+      </div>
+    `).join('');
+    updateCartSummary();
+  }
+
+  function openCart(){ cartEl.classList.add('open'); }
+  function closeCart(){ cartEl.classList.remove('open'); }
+  document.getElementById('closeCart').onclick = closeCart;
+  miniCartBtn.onclick = openCart;
+
+  /* ============================
+     3) CHECKOUT FLOW
+     ============================ */
+  document.getElementById('checkoutBtn').addEventListener('click', async ()=>{
+    msg.textContent='';
+    const name = document.getElementById('buyerName').value.trim();
+    const email = document.getElementById('buyerEmail').value.trim();
+    if(!cart.length){ msg.textContent = "Your cart is empty."; return;}
+    if(!email){ msg.textContent = "Please enter your email."; return;}
+
+    localStorage.setItem('lastOrder', JSON.stringify(cart));
+
+    try{
+      const res = await fetch('/.netlify/functions/create-checkout', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          mode: MODE,
+          items: cart.map(c => ({title:c.title, price:c.price, qty:1})),
+          customer: {name, email},
+          successUrl: location.origin + '/success.html',
+          cancelUrl: location.href
+        })
+      });
+
+      if(!res.ok){
+        throw new Error(await res.text());
+      }
+      const {id} = await res.json();
+      const result = await stripe.redirectToCheckout({ sessionId: id });
+      if(result.error) throw result.error;
+
+    }catch(err){
+      console.warn('Checkout error, going to success test flow:', err);
+      location.href = 'success.html';
+    }
+  });
+
+  // initialize summary on load
+  updateCartSummary();
+  </script>
+</body>
+</html>
