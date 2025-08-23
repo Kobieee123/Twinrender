@@ -1,9 +1,0 @@
-{
-  "name": "twinrender-shop",
-  "private": true,
-  "version": "1.0.0",
-  "license": "UNLICENSED",
-  "dependencies": {
-    "stripe": "^14.0.0"
-  }
-}
