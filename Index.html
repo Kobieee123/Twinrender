@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Twinrender – Shop</title>
+  <link rel="icon" type="image/png" href="images/logo.png"/>
+  <link rel="preconnect" href="https://js.stripe.com">
+  <script src="https://js.stripe.com/v3/"></script>
+
+  <style>
+    :root{
+      --blue:#94B5D8;           /* logo blue */
+      --text:#1f2430;           /* dark grey text */
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --bg:#ffffff;
+      --chip:#f3f6fb;           /* light blue-grey for intro & buttons */
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+
+    /* ===== Header ===== */
+    header{
+      position:sticky; top:0; z-index:10;
+      background:#fff; border-bottom:1px solid var(--border);
+      padding:18px 22px 10px 22px;
+    }
+    .header-row{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:18px;
+    }
+    .brand{display:flex; align-items:center; gap:10px;}
+    .brand img{height:55px;width:auto}
+    .brand-text h1{margin:0; font-size:22px; font-weight:800}
+    .subtitle{margin-top:2px; font-size:13px; color:var(--muted)}
+
+    .cart-summary{text-align:right; min-width:130px}
+    .cart-money{font-weight:800}
+    .cart-count{display:block; font-size:13px; color:var(--muted)}
+    .cart-btn{
+      margin-top:6px; background:#fff; border:1px solid var(--border);
+      border-radius:8px; font-size:18px; cursor:pointer; padding:6px 10px;
+    }
+
+    .nav-container{margin-top:12px; margin-left:65px}
+    .nav-links{display:flex; gap:12px; flex-wrap:wrap}
+    .nav-links a{
+      text-decoration:none; color:var(--text);
+      padding:8px 14px; border:1px solid var(--border); border-radius:12px;
+      background:#f9fafb; transition:.15s;
+    }
+    .nav-links a:hover{background:#f1f5f9}
+
+    /* ===== Top search ===== */
+    .search-wrap{max-width:1060px; margin:12px auto 0; padding:0 16px}
+    .search{
+      width:100%; border:1px solid var(--border); border-radius:12px;
+      padding:12px 14px; outline:none; font-size:15px;
+      background:#fff;
+    }
+
+    /* ===== Page layout ===== */
+    .wrap{max-width:1060px;margin:22px auto;padding:0 16px}
+
+    /* ===== Intro panel ===== */
+    .intro{background:var(--chip); border:1px solid var(--border); border-radius:16px; padding:18px; }
+    .intro h2{margin:0 0 8px}
+    .intro ul{margin:10px 0 0 0; padding-left:0; list-style:none}
+    .intro li{margin:8px 0; display:flex; gap:8px; align-items:flex-start}
+    .intro li span{line-height:1.35}
+
+    /* ===== Products ===== */
+    h3.section{margin:16px 0 6px}
+    .muted{color:var(--muted); font-size:14px}
+    .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+    @media (max-width:980px){ .grid{grid-template-columns:repeat(2,1fr)} }
+    @media (max-width:640px){ .grid{grid-template-columns:1fr} }
+
+    .card{border:1px solid var(--border); border-radius:14px; overflow:hidden; background:#fff}
+    .card .thumb{
+      width:100%; aspect-ratio:1/1; object-fit:cover; display:block;
+      background:#f5f7fb;
+    }
+    .pad{padding:12px}
+    .title{font-weight:700; margin-bottom:6px}
+    .price{color:var(--text); font-weight:700; margin-bottom:10px}
+    .buy{
+      width:100%; border:1px solid var(--border); background:var(--chip);
+      border-radius:12px; padding:10px 14px; cursor:pointer; font-weight:700;
+    }
+
+    /* ===== Cart Drawer ===== */
+    aside.cart{
+      position:fixed; top:0; right:0; width:380px; max-width:92vw; height:100dvh;
+      background:#fff; border-left:1px solid var(--border);
+      transform:translateX(100%); transition:.25s; display:flex; flex-direction:column;
+      z-index:1000;   /* 👉 always on top of header/content */
+      box-shadow:-12px 0 30px rgba(0,0,0,.08);
+    }
+    aside.cart.open{transform:translateX(0)}
+    .cart-head{display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--border)}
+    .cart-body{padding:14px; gap:12px; display:flex; flex-direction:column; overflow:auto}
+    .cart-item{display:flex; gap:10px; border:1px solid var(--border); border-radius:12px; padding:10px; background:#fff}
+    .cart-item img{width:64px;height:64px; object-fit:cover; border-radius:8px; background:#f5f7fb}
+    .right{margin-left:auto; text-align:right}
+
+    .input{width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:#f8fbff}
+    .total{font-weight:800; margin:4px 0 10px}
+    .checkout{border:1px solid var(--border); background:var(--chip); border-radius:16px; padding:14px; font-weight:800; cursor:pointer}
+    .footer-note{font-size:12px; color:var(--muted)}
+
+    /* ===== Footer banner ===== */
+    .footer-banner{margin:28px 0 0; background:var(--blue); color:#0b1a2a; border-radius:12px; padding:18px}
+    .footer-banner strong{display:block; font-size:18px; margin-bottom:6px}
+  </style>
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header>
+    <div class="header-row">
+      <div class="brand">
+        <img src="images/logo.png" alt="Twinrender logo">
+        <div class="brand-text">
+          <h1>Twinrender</h1>
+          <div class="subtitle">ready to use with Twinmotion</div>
+        </div>
+      </div>
+
+      <div class="cart-summary" id="cartSummary">
+        <span class="cart-money" id="cartTotal">€ 0.00</span>
+        <span class="cart-count" id="cartCount">0 item(s)</span>
+        <button id="openCart" class="cart-btn" title="Open cart">🛒</button>
+      </div>
+    </div>
+
+    <div class="nav-container">
+      <nav class="nav-links">
+        <a href="index.html">Shop</a>
+        <a href="https://www.instagram.com/archiprogress" target="_blank">My account</a>
+        <a href="mailto:kobemertens2004@hotmail.com">Contact</a>
+        <a href="#">Terms of use</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <input class="search" placeholder="Search products… (coming soon)" />
+  </div>
+
+  <div class="wrap">
+    <!-- Intro -->
+    <div class="intro">
+      <h2>Skip the setup. Start rendering.</h2>
+      <p>When you purchase, you get the exact Twinmotion source file of the render images shown. Use it as your shortcut to high-quality results. What you get — just swap in your model and hit render.</p>
+      <ul>
+        <li>🌿 <span>Replace my model with yours — all settings stay in place</span></li>
+        <li>💡 <span>Perfectly tuned lighting, cameras and environments</span></li>
+        <li>🎨 <span>Realistic materials and textures ready to go</span></li>
+        <li>⏱️ <span>Save hours of trial & error — render professional images instantly</span></li>
+        <li>✨ <span>Learn from a complete example and improve your workflow</span></li>
+      </ul>
+    </div>
+
+    <!-- Products -->
+    <h3 class="section">Products</h3>
+    <div class="muted">Add to cart and proceed to checkout.</div>
+
+    <div class="grid" id="productGrid"></div>
+
+    <!-- Footer banner -->
+    <div class="footer-banner">
+      <strong>Need help?</strong>
+      Email us at <a href="mailto:kobemertens2004@hotmail.com" style="color:#0b1a2a; font-weight:700; text-decoration:underline">kobemertens2004@hotmail.com</a>.  
+      Payments are handled securely by Stripe.
+    </div>
+  </div>
+
+  <!-- ===== CART DRAWER ===== -->
+  <aside class="cart" id="cart">
+    <div class="cart-head">
+      <strong>Your cart</strong>
+      <button class="cart-btn" id="closeCart" title="Close">✕</button>
+    </div>
+    <div class="cart-body">
+      <div id="cartItems"></div>
+
+      <div class="muted">Name</div>
+      <input class="input" id="buyerName" placeholder="Your name"/>
+      <div class="muted">Email</div>
+      <input class="input" id="buyerEmail" placeholder="you@example.com"/>
+
+      <div class="total" id="totalLabel">Total: € 0.00</div>
+      <button class="checkout" id="checkoutBtn">Checkout</button>
+      <div class="footer-note" id="msg"></div>
+    </div>
+  </aside>
+
+  <!-- ====================== SCRIPT (SAFE TO REPLACE) ====================== -->
+  <script>
+  /***********************
+   * 1) TEST / LIVE TOGGLE
+   ***********************/
+  const MODE = "test"; // "test" or "live"
+  const STRIPE_PUBLISHABLE = {
+    test: "pk_test_51RxuD8HoOWyFBTgUahIOlF5pVwHqjSoGiG14HULLaNbso9zK9LtOtSOhuDZVReOt1gAusMPKJGT6UoSGBoejozvM00kSsc8Qvr",
+    live: "pk_live_51RxuD8HoOWyFBTgU1X8zPjcFWis7i0tbg0tGmxcxvaoYYJBMct84LRKCBzswNZcAHGv8uOLCCrxy2KXmsttFhLOz003YcvJZjL"
+  };
+  const stripe = Stripe(STRIPE_PUBLISHABLE[MODE]);
+
+  /***********************
+   * 2) PRODUCTS
+   ***********************/
+  const PRODUCTS = [
+    {
+      id: "RT-0001",
+      title: "Rooftop Terras (Twinmotion)",
+      price: 29.00,
+      img: "images/rooftop-terras.jpg"
+    }
+    // Add more products here if you like (they will flow 3-across automatically)
+  ];
+
+  /***********************
+   * 3) DOM ELEMENTS
+   ***********************/
+  const productGrid = document.getElementById('productGrid');
+  const cartEl = document.getElementById('cart');
+  const cartItemsEl = document.getElementById('cartItems');
+  const totalLabel = document.getElementById('totalLabel');
+  const msg = document.getElementById('msg');
+  const headerMoney = document.getElementById('cartTotal');
+  const headerCount = document.getElementById('cartCount');
+
+  document.getElementById('openCart').onclick = () => cartEl.classList.add('open');
+  document.getElementById('closeCart').onclick = () => cartEl.classList.remove('open');
+
+  /***********************
+   * 4) RENDER PRODUCTS
+   ***********************/
+  function renderProducts(){
+    productGrid.innerHTML = PRODUCTS.map(p => `
+      <div class="card">
+        <img class="thumb" src="${p.img}" alt="">
+        <div class="pad">
+          <div class="title">${p.title}</div>
+          <div class="price">€ ${p.price.toFixed(2)}</div>
+          <button class="buy" onclick='addToCart("${p.id}")'>Add to cart</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  renderProducts();
+
+  /***********************
+   * 5) CART STATE
+   ***********************/
+  let cart = []; // {id, title, price, img}
+
+  function addToCart(id){
+    const p = PRODUCTS.find(x=>x.id===id);
+    if(!p) return;
+    cart.push({...p});
+    openCart();
+    renderCart();
+  }
+  function removeFromCart(i){
+    cart.splice(i,1);
+    renderCart();
+  }
+  function openCart(){ cartEl.classList.add('open'); }
+
+  function renderCart(){
+    // UI list
+    if(cart.length===0){
+      cartItemsEl.innerHTML = `<div class="muted">Your cart is empty.</div>`;
+    }else{
+      cartItemsEl.innerHTML = cart.map((c,i)=>`
+        <div class="cart-item">
+          <img src="${c.img || ''}" alt="">
+          <div>
+            <div><strong>${c.title}</strong></div>
+            <div class="muted">€ ${c.price.toFixed(2)}</div>
+          </div>
+          <div class="right">
+            <button class="cart-btn" onclick="removeFromCart(${i})">Remove</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Totals
+    const total = cart.reduce((s,x)=>s + x.price, 0);
+    totalLabel.textContent = `Total: € ${total.toFixed(2)}`;
+
+    // Header summary
+    headerMoney.textContent = `€ ${total.toFixed(2)}`;
+    headerCount.textContent = `${cart.length} item(s)`;
+  }
+
+  /***********************
+   * 6) CHECKOUT
+   ***********************/
+  document.getElementById('checkoutBtn').addEventListener('click', async ()=>{
+    msg.textContent='';
+    const name = document.getElementById('buyerName').value.trim();
+    const email = document.getElementById('buyerEmail').value.trim();
+    if(!cart.length){ msg.textContent = "Your cart is empty."; return; }
+    if(!email){ msg.textContent = "Please enter your email."; return; }
+
+    // persist order for success page (download use)
+    localStorage.setItem('lastOrder', JSON.stringify(cart));
+
+    try{
+      const res = await fetch('/.netlify/functions/create-checkout', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          mode: MODE,
+          items: cart.map(c => ({title:c.title, price:c.price, qty:1})),
+          customer: {name, email},
+          successUrl: location.origin + '/success.html',
+          cancelUrl: location.href
+        })
+      });
+
+      if(!res.ok){
+        throw new Error(await res.text());
+      }
+      const {id} = await res.json();
+
+      // Stripe redirect
+      const result = await stripe.redirectToCheckout({ sessionId: id });
+      if(result.error) throw result.error;
+
+    }catch(err){
+      console.warn('Checkout error (test fallback):', err);
+      // Allow test flow without Stripe during development
+      location.href = 'success.html';
+    }
+  });
+
+  // Initial header summary
+  renderCart();
+  </script>
+</body>
+</html>
