@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Shipping costs – Twinrender</title>
+  <link rel="preconnect" href="https://js.stripe.com">
+  <style>
+    /* --------- Minimal shared styles (kept lightweight) --------- */
+    :root{
+      --brand:#97B3D4;         /* your logo blue (header/banner/footer) */
+      --ink:#0e1420;           /* dark text */
+      --muted:#6c778a;
+      --border:#e8edf3;
+      --chip:#f5f7fb;
+      --wrap:1180px;
+      --gutter:24px;
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;background:#fff;color:var(--ink)}
+    a{color:#1b4fc2;text-decoration:none}
+    a:hover{text-decoration:underline}
+    .wrap{max-width:var(--wrap);margin:0 auto;padding:0 var(--gutter)}
+    .topbar{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:999}
+    .topbar .inner{display:flex;align-items:center;justify-content:space-between;height:86px}
+    .brand{display:flex;align-items:center;gap:14px;margin-left:-60px;} /* nudged left as you asked */
+    .brand img{height:38px;display:block}
+    .brand-title{line-height:1}
+    .brand-title h1{font-size:22px;font-weight:800;margin:0}
+    .brand-title .tag{font-size:13px;color:var(--muted)}
+    .nav{display:flex;gap:10px}
+    .chip{background:var(--chip);border:1px solid var(--border);padding:10px 14px;border-radius:12px;font-weight:600;color:var(--ink)}
+    .search{width:340px;background:var(--chip);border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+    .crumbs{background:var(--brand);color:#0a2540;margin:0 0 22px;padding:12px 0}
+    .crumbs .wrap{display:flex;gap:8px;align-items:center;font-size:14px}
+    .crumbs a{color:#0a2540;text-decoration:underline}
+    main{padding:16px 0 60px}
+    h1{font-size:34px;margin:8px 0 18px}
+    h2{font-size:20px;margin:22px 0 10px}
+    p{line-height:1.6;margin:10px 0}
+    .note{color:var(--muted);font-size:14px}
+    /* footer */
+    footer.site{background:var(--brand);margin-top:60px}
+    footer .inner{padding:42px 0 56px}
+    .ft-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px}
+    footer h3{margin:0 0 10px;font-size:16px}
+    footer ul{margin:0;padding:0;list-style:none}
+    footer li{margin:8px 0}
+    footer a{color:#0a2540}
+    footer .copyright{border-top:1px solid rgba(10,37,64,.15);padding:14px 0;color:#0a2540;font-size:13px}
+    @media(max-width:900px){
+      .brand{margin-left:0}
+      .nav{flex-wrap:wrap}
+      .search{display:none}
+      .ft-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="topbar">
+    <div class="wrap inner">
+      <a class="brand" href="index.html">
+        <img src="Images/logo.png" alt="Twinrender logo" />
+        <span class="brand-title">
+          <h1>Twinrender</h1>
+          <div class="tag">ready to use with Twinmotion</div>
+        </span>
+      </a>
+      <nav class="nav">
+        <a class="chip" href="index.html">Shop</a>
+        <a class="chip" href="https://www.instagram.com/archiprogress" target="_blank" rel="noopener">My account</a>
+        <a class="chip" href="mailto:Twinrender@hotmail.com">Contact</a>
+        <a class="chip" href="terms.html">Terms of use</a>
+      </nav>
+      <input class="search" type="search" placeholder="Search products…" />
+    </div>
+  </header>
+
+  <!-- Breadcrumb like your screenshot -->
+  <div class="crumbs">
+    <div class="wrap"><a href="index.html">Home</a> › <strong>Shipping costs</strong></div>
+  </div>
+
+  <main class="wrap">
+    <h1>Shipping costs</h1>
+
+    <p class="note">Digital products – instant download. No physical shipping.</p>
+
+    <h2>[ENGLISH]</h2>
+    <p>There are no shipping costs for downloadable items. Once your payment is successful you will be redirected to the download page and receive a confirmation email.</p>
+
+    <h2>[GERMAN]</h2>
+    <p>Für Download-Artikel fallen keine Versand- oder Lieferkosten an. Nach erfolgreicher Zahlung werden Sie zur Download-Seite weitergeleitet und erhalten eine Bestätigungs-E-Mail.</p>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site">
+    <div class="wrap inner">
+      <div class="ft-grid">
+        <div>
+          <h3>Pages</h3>
+          <ul>
+            <li><a href="index.html">Shop</a></li>
+            <li><a href="https://www.instagram.com/archiprogress" target="_blank" rel="noopener">My account</a></li>
+            <li><a href="mailto:Twinrender@hotmail.com">Contact</a></li>
+            <li><a href="terms.html">Terms of use</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Policies</h3>
+          <ul>
+            <li><a href="privacy.html">Privacy policy</a></li>
+            <li><a href="refunds.html">Right of withdrawal / Refunds</a></li>
+            <li><a href="shipping.html">Shipping costs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>About</h3>
+          <ul>
+            <li>Twinrender</li>
+            <li><a href="mailto:Twinrender@hotmail.com">Twinrender@hotmail.com</a></li>
+            <li>Instagram: <a href="https://www.instagram.com/archiprogress" target="_blank" rel="noopener">@archiprogress</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="copyright">© Twinrender, all rights reserved.</div>
+    </div>
+  </footer>
+
+</body>
+</html>
